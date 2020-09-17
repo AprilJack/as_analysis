@@ -39,6 +39,7 @@ fi
 
 # you should change the google life sciences values to whatever works for your setup!
 # see https://snakemake.readthedocs.io/en/stable/executor_tutorial/google_lifesciences.html
+# after use-conda : --configfile configs/config-WASP.yaml 
 snakemake \
 --google-lifesciences \
 --default-remote-prefix salk-mcvicker-poc_test \

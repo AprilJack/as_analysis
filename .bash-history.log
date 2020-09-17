@@ -1,0 +1,22 @@
+2020-09-17.06:12:57   741  cd april_as_analysis/
+2020-09-17.06:12:58   742  ll
+2020-09-17.06:13:19   744  cd april_as_analysis/
+2020-09-17.06:13:20   745  ll 
+2020-09-17.06:13:39   746  mv ../xxx_april_as_analysis/config.yaml . 
+2020-09-17.06:14:22   752  cd april_as_analysis/
+2020-09-17.06:14:40   753  cp ../xxx_april_as_analysis/config.yaml .
+2020-09-17.06:14:42   754  ll
+2020-09-17.06:15:00   755  cp ../xxx_april_as_analysis/run-gcp . 
+2020-09-17.06:15:09   756  cp ../xxx_april_as_analysis/WASP/ . 
+2020-09-17.06:15:14   757  ll
+2020-09-17.06:15:19   758  cp -r ../xxx_april_as_analysis/WASP/ . 
+2020-09-17.06:15:20   759  ll
+2020-09-17.06:15:28   762  cd ..
+2020-09-17.06:15:29   763  ll 
+2020-09-17.06:17:38   764  git checkout -b "april-working"
+2020-09-17.06:17:47   765  git branch
+2020-09-17.06:19:12   766  git commit -m "second attempt"
+2020-09-17.06:19:53   767  git config --global user.email "apriljack06@gmail.com"
+2020-09-17.06:20:07   768  git config --global user.name "AprilJack"
+2020-09-17.06:20:13   769  git commit -m "second attempt"
+2020-09-17.06:20:42   770  git add WASP/
