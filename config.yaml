@@ -19,7 +19,7 @@
 # The path to a STAR index directory for "ref_genome"
 # If "ref_genome" is provided but not this, the pipeline will create the index
 # on the fly
-# "ref_genome_star" : "data/star_index"
+#"ref_genome_star" : "data/star_index"
 
 # Text file containing names and lengths of all chromosomes in the assembly. chromInfo.txt files can be downloaded from the UCSC genome browser.
 # For example a chromInfo.txt.gz file for hg19 can be downloaded from http://hgdownload.soe.ucsc.edu/goldenPath/hg19/database/chromInfo.txt.gz
@@ -51,7 +51,7 @@
 # A VCF file with which to run WASP. This can come from the variant calling pipeline
 # The VCF must be gzipped and tabix-indexed (with a .tbi index in the same dir)
 # It must also contain genotype quality (GQ) information
-"vcf_file" : "data/GTEx_Analysis_2017-06-05_v8_WholeGenomeSeq_838Indiv_Analysis_Freeze.SHAPEIT2_phased.vcf.gz"
+"vcf_file" : "data/GTEx_Analysis_2017-06-05_v8_WholeGenomeSeq_838Indiv_Analysis_Freeze.SHAPEIT2_phased.GQ.vcf.gz"
 
 # If you already have SNP HDF5 files, specify the directory of the files here
 # Otherwise, they will be created in this location

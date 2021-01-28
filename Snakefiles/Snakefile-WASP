@@ -5,9 +5,9 @@ from snakemake.utils import min_version
 ##### set minimum snakemake version #####
 min_version("5.18.0")
 
-
 include: "snp2h5_rules.smk"
 
+##create_STAR_index orig output "output: directory(config['output_dir'] + "/ref_genome/star_index")" directory output not currently working from Snakemake on GCP, changing to file for now.
 rule create_STAR_index:
     """create an index of the reference genome using STAR"""
     input:
@@ -16,7 +16,7 @@ rule create_STAR_index:
     params:
         overhang = config['sjdbOverhang'] if 'sjdbOverhang' in config and \
             config['sjdbOverhang'] else 100
-    output: directory(config['output_dir'] + "/ref_genome/star_index")
+    output: config['output_dir'] + "/ref_genome/star_index/SA"
     conda: "../envs/default.yaml"
     benchmark: config['output_dir'] + "/benchmark/WASP/create_STAR_index/all.tsv"
     threads: 12
@@ -75,7 +75,9 @@ rule find_intersecting_snps:
         snp_index = rules.vcf2h5.output.snp_index,
         snp_tab = rules.vcf2h5.output.snp_tab,
         haplotype = rules.vcf2h5.output.haplotype,
-        find_intersecting_snps_script = rules.get_WASP.output.find_intersecting_snps_script
+        find_intersecting_snps_script = rules.get_WASP.output.find_intersecting_snps_script,
+        util_script = config['wasp_dir'] + "/mapping/util.py",
+	snptable_script = config['wasp_dir'] + "/mapping/snptable.py"
     params:
         sample_names = lambda wildcards: SAMP_TO_VCF_ID[wildcards.sample],
         output_dir = lambda wildcards, output: str(Path(output.fastq1).parent)
@@ -100,23 +102,42 @@ rule find_intersecting_snps:
             "{input.bam}"
 
 rule map_STAR2:
+#$(dirname {input.reference})
     """map reads a second time using STAR"""
     input:
         fastq1 = rules.find_intersecting_snps.output.fastq1,
         fastq2 = rules.find_intersecting_snps.output.fastq2,
+	star1 = config['output_dir'] + "/ref_genome/star_index/Genome",
+	star2 = config['output_dir'] + "/ref_genome/star_index/Log.out",
+	star3 = config['output_dir'] + "/ref_genome/star_index/SA",
+	star4 = config['output_dir'] + "/ref_genome/star_index/SA_copy",
+	star5 = config['output_dir'] + "/ref_genome/star_index/SAindex",
+	star6 = config['output_dir'] + "/ref_genome/star_index/chrLength.txt",
+	star7 = config['output_dir'] + "/ref_genome/star_index/chrName.txt",
+	star8 = config['output_dir'] + "/ref_genome/star_index/chrNameLength.txt",
+	star9 = config['output_dir'] + "/ref_genome/star_index/chrStart.txt",
+	star10 = config['output_dir'] + "/ref_genome/star_index/create_star_index.bash",
+	star11 = config['output_dir'] + "/ref_genome/star_index/exonGeTrInfo.tab",
+	star12 = config['output_dir'] + "/ref_genome/star_index/exonInfo.tab",
+	star13 = config['output_dir'] + "/ref_genome/star_index/geneInfo.tab",
+	star14 = config['output_dir'] + "/ref_genome/star_index/genomeParameters.txt",
+	star15 = config['output_dir'] + "/ref_genome/star_index/sjdbInfo.txt",
+	star16 = config['output_dir'] + "/ref_genome/star_index/sjdbList.fromGTF.out.tab",
+	star17 = config['output_dir'] + "/ref_genome/star_index/sjdbList.out.tab",
+	star18 = config['output_dir'] + "/ref_genome/star_index/transcriptInfo.tab",
         reference = config['ref_genome_star'] if 'ref_genome_star' in config and \
-            config['ref_genome_star'] else rules.create_STAR_index.output
+                    config['ref_genome_star'] else rules.create_STAR_index.output
     params:
         prefix = lambda wildcards, output: str(Path(output[0]).parent)+"/"
     output:
-        temp(str(Path(config['output_dir']).absolute()) + "/map2/{sample}/Aligned.out.bam")
+        temp(config['output_dir'] + "/map2/{sample}/Aligned.out.bam")
     conda: "../envs/default.yaml"
     benchmark: config['output_dir'] + "/benchmark/WASP/map_STAR2/{sample}.tsv"
     resources:
-        mem_mb = 30000
+        mem_mb = 50000
     shell:
-        "STAR --runThreadN 1 "
-            "--genomeDir {input.reference} "
+        "STAR --runThreadN 8 "
+            "--genomeDir $(dirname {input.reference}) " 
             "--readFilesIn {input.fastq1} {input.fastq2} "
             "--readFilesCommand zcat "
             "--outSAMtype BAM Unsorted "
@@ -163,13 +184,16 @@ rule sort_filtered_bam:
     output:
         bam = config['output_dir'] + "/filter_remapped_reads/{sample}.keep.sort.bam",
         index = config['output_dir'] + "/filter_remapped_reads/{sample}.keep.sort.bam.bai"
+    params:
+        mem = "-m 8G",
+    	prefix = config['output_dir'] + "/filter_remapped_reads/{sample}"
     conda: "../envs/default.yaml"
     benchmark: config['output_dir'] + "/benchmark/WASP/sort_filtered_bam/{sample}.tsv"
     resources:
-        mem_mb = 1100
+        mem_mb = 8000
     shell:
-        "samtools sort -o {output} {input} && "
-        "samtools index {output} && "
+        "samtools sort {params.mem} -T {params.prefix} -o {output.bam} {input} && "
+        "samtools index {output.bam} && "
         "touch -c {output.bam}"
 
 rule rmdup:
@@ -177,10 +201,12 @@ rule rmdup:
     input:
         bam = rules.sort_filtered_bam.output.bam,
         index = rules.sort_filtered_bam.output.index,
-        rmdup_script = rules.get_WASP.output.rmdup_script
+        rmdup_script = rules.get_WASP.output.rmdup_script,
+	util_script = rules.get_WASP.output.util_script
     output:
         rmdup = temp(config['output_dir'] + "/rmdup/{sample}.keep.rmdup.bam"),
-        sort = config['output_dir'] + "/rmdup/{sample}.keep.rmdup.sort.bam"
+    	sort = config['output_dir'] + "/rmdup/{sample}.keep.rmdup.sort.bam",
+        index = config['output_dir'] + "/rmdup/{sample}.keep.rmdup.sort.bam.bai"
     conda: "../envs/default.yaml"
     benchmark: config['output_dir'] + "/benchmark/WASP/rmdup_pe/{sample}.tsv"
     resources:

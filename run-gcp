@@ -37,16 +37,19 @@ if ! command -v 'snakemake' &>/dev/null && \
 	conda activate snakemake
 fi
 
+
 # you should change the google life sciences values to whatever works for your setup!
 # see https://snakemake.readthedocs.io/en/stable/executor_tutorial/google_lifesciences.html
 # after use-conda : --configfile configs/config-WASP.yaml 
 snakemake \
+--reason \
 --google-lifesciences \
 --default-remote-prefix salk-mcvicker-poc_test \
 --google-lifesciences-region us-west2 \
---default-resources 'disk_mb=35000' \
+--default-resources 'disk_mb=250000' \
 -j \
 --notemp \
+--preemption-default 10 \
 --latency-wait 120 \
 --use-conda \
 "$@" &>"log/log"

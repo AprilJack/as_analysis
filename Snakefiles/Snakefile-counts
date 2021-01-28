@@ -89,11 +89,16 @@ rule get_as_counts:
         bam = lambda wildcards: SAMP3[wildcards.sample][
             wildcards.type == "rna" and not config['rna_only']
         ],
+	index = rules.rmdup.output.index,
         snp_index = rules.vcf2h5.output.snp_index,
         snp_tab = rules.vcf2h5.output.snp_tab,
         haplotype = rules.vcf2h5.output.haplotype,
         chrom = config['chrom_info'],
-        bam2h5_script = rules.get_WASP.output.bam2h5_script
+        bam2h5_script = rules.get_WASP.output.bam2h5_script,
+	chrom_script = rules.get_WASP.output.chrom_script,
+	util_script = rules.get_WASP.output.util_CHT_script,
+	snptable_script = rules.get_WASP.output.snptable_script,
+	chromstat_script = rules.get_WASP.output.chromstat_script
     params:
         sample_name = lambda wildcards: SAMP_TO_VCF_ID[wildcards.sample]
     output:
@@ -139,14 +144,13 @@ rule extract_hets:
     input:
         rules.get_as_counts.output.txt_counts
     output:
-        config['output_dir'] +
-        "/as_counts/{sample}/{type}.as_counts.hets.txt.gz"
+        config['output_dir'] + "/as_counts/{sample}/{type}.as_counts.hets.txt.gz"
     conda: "../envs/default.yaml"
     benchmark: config['output_dir'] + "/benchmark/counts/extract_hets/{sample}_{type}.tsv"
     resources:
-        mem_mb = 50
+        mem_mb = 5000
     shell:
-        "zcat {input} | grep -E ' 0\|1 | 1\|0 ' | gzip >{output}"
+         "which grep; which zcat; which gzip; zcat < {input} | grep -E ' 0\|1 | 1\|0 ' | gzip > {output}"
 
 rule remove_indel_counts:
     """remove indels from the counts files in case the input VCF contained

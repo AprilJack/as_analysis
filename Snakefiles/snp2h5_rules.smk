@@ -14,7 +14,12 @@ rule get_WASP:
         filter_remapped_reads_script = config['wasp_dir'] + "/mapping/filter_remapped_reads.py",
         rmdup_script = config['wasp_dir'] + "/mapping/rmdup_pe.py",
         bam2h5_script = config['wasp_dir'] + "/CHT/bam2h5.py",
-        makefile = config['wasp_dir'] + "/snp2h5/Makefile"
+        chrom_script = config['wasp_dir'] + "/CHT/chromosome.py", 
+        makefile = config['wasp_dir'] + "/snp2h5/Makefile",
+        util_script = config['wasp_dir'] + "/mapping/util.py",
+        chromstat_script = config['wasp_dir'] + "/CHT/chromstat.py",
+	util_CHT_script = config['wasp_dir'] + "/CHT/util.py",
+	snptable_script = config['wasp_dir'] + "/mapping/snptable.py",
     conda: "../envs/default.yaml"
     benchmark: config['output_dir'] + "/benchmark/snp2h5/get_WASP/all.tsv"
     shell:
