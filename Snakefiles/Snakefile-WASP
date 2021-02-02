@@ -27,11 +27,46 @@ rule create_STAR_index:
         "--sjdbOverhang {params.overhang} --runMode genomeGenerate "
         "--genomeFastaFiles {input.ref} --sjdbGTFfile {input.genes}"
 
+rule split_bams:
+    """map reads using STAR"""
+    input:
+        bam = lambda wildcards: SAMP2[wildcards.sample][0],
+        bai = lambda wildcards: SAMP2[wildcards.sample][1]
+    params:
+        prefix = lambda wildcards, output: str(Path(output[0]).parent)+"/"
+    output:
+        fastq1 = config['output_dir'] + "/fastqs/{sample}.fq1.gz",
+        fastq2 = config['output_dir'] + "/fastqs/{sample}.fq2.gz"
+    conda: "../envs/default.yaml"
+    benchmark: config['output_dir'] + "/benchmark/WASP/map_STAR1/{sample}.tsv"
+    resources:
+        mem_mb = 1100
+    shell:
+        "samtools fastq -@ 8 {input.bam} -1 {output.fastq1} -2 {output.fastq2} -0 /dev/null -s /dev/null -n"
+
 rule map_STAR1:
     """map reads using STAR"""
     input:
-        fastq1 = lambda wildcards: SAMP2[wildcards.sample][0],
-        fastq2 = lambda wildcards: SAMP2[wildcards.sample][1],
+    	star1 = config['output_dir'] + "/ref_genome/star_index/Genome",
+	star2 = config['output_dir'] + "/ref_genome/star_index/Log.out",
+	star3 = config['output_dir'] + "/ref_genome/star_index/SA",
+	star4 = config['output_dir'] + "/ref_genome/star_index/SA_copy",
+	star5 = config['output_dir'] + "/ref_genome/star_index/SAindex",
+	star6 = config['output_dir'] + "/ref_genome/star_index/chrLength.txt",
+	star7 = config['output_dir'] + "/ref_genome/star_index/chrName.txt",
+	star8 = config['output_dir'] + "/ref_genome/star_index/chrNameLength.txt",
+	star9 = config['output_dir'] + "/ref_genome/star_index/chrStart.txt",
+	star10 = config['output_dir'] + "/ref_genome/star_index/create_star_index.bash",
+	star11 = config['output_dir'] + "/ref_genome/star_index/exonGeTrInfo.tab",
+	star12 = config['output_dir'] + "/ref_genome/star_index/exonInfo.tab",
+	star13 = config['output_dir'] + "/ref_genome/star_index/geneInfo.tab",
+	star14 = config['output_dir'] + "/ref_genome/star_index/genomeParameters.txt",
+	star15 = config['output_dir'] + "/ref_genome/star_index/sjdbInfo.txt",
+	star16 = config['output_dir'] + "/ref_genome/star_index/sjdbList.fromGTF.out.tab",
+	star17 = config['output_dir'] + "/ref_genome/star_index/sjdbList.out.tab",
+	star18 = config['output_dir'] + "/ref_genome/star_index/transcriptInfo.tab",
+        fastq1 = rules.split_bams.output.fastq1,,
+        fastq2 = rules.split_bams.output.fastq2,
         index = config['ref_genome_star'] if 'ref_genome_star' in config and \
             config['ref_genome_star'] else rules.create_STAR_index.output
     params:
