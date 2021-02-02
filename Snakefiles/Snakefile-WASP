@@ -30,8 +30,8 @@ rule create_STAR_index:
 rule split_bams:
     """map reads using STAR"""
     input:
-        bam = lambda wildcards: SAMP2[wildcards.sample][0],
-        bai = lambda wildcards: SAMP2[wildcards.sample][1]
+        bam = lambda wildcards: GS.remote(SAMP2[wildcards.sample][0]),
+        bai = lambda wildcards: GS.remote(SAMP2[wildcards.sample][1])
     params:
         prefix = lambda wildcards, output: str(Path(output[0]).parent)+"/"
     output:
